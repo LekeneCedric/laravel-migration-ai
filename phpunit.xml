@@ -1,0 +1,19 @@
+<phpunit
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+        colors="true"
+        bootstrap="vendor/autoload.php">
+    <php>
+        <env name="GEMINI_API_KEY" value="AIzaSyCj-h4RhWxreMtnMxZFXvNRM7WYErnOddw"/>
+        <env name="OPENAI_API_KEY" value="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" />
+        <env name="MODEL" value="gemini"/>
+    </php>
+    <testsuites>
+        <testsuite name="Feature Test Suite">
+            <directory>tests/Feature</directory>
+        </testsuite>
+        <testsuite name="Unit Test Suite">
+            <directory>tests/Unit</directory>
+        </testsuite>
+    </testsuites>
+</phpunit>

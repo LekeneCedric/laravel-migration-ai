@@ -2,6 +2,12 @@
     "name": "cedric-lekene/laravel-migration-ai",
     "description": "A Laravel package that uses AI to generate database migrations from plain-language descriptions, simplifying the migration creation process",
     "type": "library",
+    "keywords": [
+        "laravel",
+        "migration",
+        "ai",
+        "database"
+    ],
     "license": "MIT",
     "authors": [
         {
@@ -21,12 +27,17 @@
             ]
         }
     },
-    "minimum-stability": "stable",
+    "minimum-stability": "dev",
     "prefer-stable": true,
     "require": {
-        "php": "^8.0",
-        "illuminate/console": "^9.52.16|^10.0|^11.0",
-        "illuminate/support": "^9.52.16|^10.0|^11.0",
+        "php": "^8.2",
+        "ext-curl": "*",
+        "illuminate/support": "^9.21|^10.0",
+        "illuminate/console": "^9.21|^10.0",
         "illuminate/database": "^9.21|^10.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.0",
+        "mockery/mockery": "^1.6.10"
     }
 }
