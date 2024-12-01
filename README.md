@@ -8,7 +8,7 @@ A Laravel package that uses AI to generate database migrations from plain-langua
 - [Configuration](#configuration)
 - [Usage](#usage)
 - [Commands](#commands)
-- [Real Example](#Real Exemple)
+- [Example](#Exemple)
 - [License](#license)
 - [Contributing](#contributing)
 
@@ -63,7 +63,7 @@ Once the package is installed and configured, you can generate a migration file 
 ```bash
 php artisan make:migration-ai migration_name description="description about the content of migration"
 ```
-### Real Example
+### Example
 
 ```bash
 php artisan make:migration-ai add_fields_in_users_table description=" Add a new column named 'age'(integer|nullable|default value 0) , 'sexe'(string|nullable), 'phone'(string|nullable)"
