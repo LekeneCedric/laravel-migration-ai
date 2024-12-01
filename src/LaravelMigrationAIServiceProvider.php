@@ -28,6 +28,11 @@ class LaravelMigrationAIServiceProvider extends ServiceProvider
         }
     }
 
+    /**
+     * Register the MigrationAICreator
+     *
+     * @return void
+     */
     private function registerCreator(): void
     {
         $this->app->singleton(MigrationAICreator::class, function($app) {

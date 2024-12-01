@@ -1,15 +1,22 @@
 <?php
 
-namespace CedricLekene\LaravelMigrationAI\Infrastructure;
+namespace CedricLekene\LaravelMigrationAI\Http;
 
 class HttpClient
 {
+    /**
+     * @param string $url
+     * @param string $method
+     * @param array $headers
+     * @param mixed|null $body
+     * @return array
+     */
     public static function httpCall(
         string $url,
         string $method,
         array $headers = [],
         mixed $body = null
-    )
+    ): array
     {
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -31,13 +38,23 @@ class HttpClient
         // Check for errors
         if (curl_errno($ch)) {
             curl_close($ch);
-            return false; // Return false on cURL error
+            return [
+                'status' => false,
+                'response' => [
+                    'error' => [
+                        'message' => curl_error($ch)
+                    ]
+                ]
+            ];
         }
 
         // Close cURL
         curl_close($ch);
 
-        // Return data if successful (HTTP 200), otherwise return false
-        return ($httpCode === 200) ? json_decode($response, true) : false;
+
+        return [
+            'status' => $httpCode == 200,
+            'response' => json_decode($response, true)
+        ];
     }
 }

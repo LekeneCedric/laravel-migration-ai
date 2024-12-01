@@ -1,13 +1,20 @@
 <?php
 
-namespace CedricLekene\LaravelMigrationAI\Services;
+namespace CedricLekene\LaravelMigrationAI\Http\Services;
 
 use CedricLekene\LaravelMigrationAI\contracts\AIService;
 use CedricLekene\LaravelMigrationAI\Dto\MigrationContentDto;
-use CedricLekene\LaravelMigrationAI\Infrastructure\HttpClient;
+use CedricLekene\LaravelMigrationAI\Enums\ErrorMessagesEnum;
+use CedricLekene\LaravelMigrationAI\Http\HttpClient;
+use Exception;
 
 class OpenAIService implements AIService
 {
+    private HttpClient $httpClient;
+    public function __construct()
+    {
+        $this->httpClient = new HttpClient();
+    }
 
     public function execute(string $apiKey, string $model, bool $isCreate, string $description): MigrationContentDto
     {
@@ -21,21 +28,27 @@ class OpenAIService implements AIService
         ];
 
         $headers = [
-            'Content-Type: application/json',
+            'Content-Type: Application/json',
             'Authorization: Bearer ' . $apiKey,
         ];
 
-        $response = HttpClient::httpCall($apiUrl, 'POST', $headers, $requestBody);
-        var_dump($response);
-        if (!$response) {
-            return new MigrationContentDto(message: 'Something went wrong dude , try again !');
+        $httpResponse = $this->httpClient::httpCall($apiUrl, 'POST', $headers, $requestBody);
+
+        try {
+            if (!$httpResponse['status']) {
+                return new MigrationContentDto(message: $httpResponse['error']['message']);
+            }
+            $cleanedResponse = $httpResponse['choices'][0]['message']['content'];
+            $responseData = json_decode($cleanedResponse, true);
+            return new MigrationContentDto(
+                migrationUp: $responseData['content'],
+                migrationDown: $responseData['reverse_content'] ?? ''
+            );
+        } catch (Exception) {
+            return new MigrationContentDto(
+                message: ErrorMessagesEnum::SOMETHING_WENT_WRONG->value,
+            );
         }
-        $cleanedResponse = $response['choices'][0]['message']['content'];
-        $responseData = json_decode($cleanedResponse, true);
-        return new MigrationContentDto(
-            migrationUp: $responseData['content'],
-            migrationDown: $responseData['reverse_content'] ?? ''
-        );
     }
 
     private function buildPrompt(string $description, bool $isCreate): array

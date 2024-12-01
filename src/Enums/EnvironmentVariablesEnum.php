@@ -9,5 +9,5 @@ enum EnvironmentVariablesEnum: string
     case GEMINI_MODEL = 'GEMINI_MODEL';
     case DEFAULT_GEMINI_MODEL = 'gemini-1.5-flash';
     case OPENAI_MODEL = 'OPENAI_MODEL';
-    case DEFAULT_OPENAI_MODEL = 'gpt-4o';
+    case DEFAULT_OPENAI_MODEL = 'gpt-4o-mini';
 }

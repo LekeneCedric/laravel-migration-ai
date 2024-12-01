@@ -5,8 +5,7 @@
         bootstrap="vendor/autoload.php">
     <php>
         <env name="GEMINI_API_KEY" value="AIzaSyCj-h4RhWxreMtnMxZFXvNRM7WYErnOddw"/>
-        <env name="OPENAI_API_KEY" value="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" />
-        <env name="MODEL" value="gemini"/>
+        <env name="OPENAI_API_KEY" value="" />
     </php>
     <testsuites>
         <testsuite name="Feature Test Suite">

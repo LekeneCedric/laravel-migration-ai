@@ -7,15 +7,16 @@ use CedricLekene\LaravelMigrationAI\Database\Migrations\MigrationAICreator;
 use CedricLekene\LaravelMigrationAI\Dto\MigrationContentDto;
 use CedricLekene\LaravelMigrationAI\Enums\EnvironmentVariablesEnum;
 use CedricLekene\LaravelMigrationAI\Enums\ServiceTypeEnum;
+use CedricLekene\LaravelMigrationAI\Exceptions\UnexpectedHttpClientErrorException;
+use CedricLekene\LaravelMigrationAI\Exceptions\UnknownApiKeyProvidedException;
 use CedricLekene\LaravelMigrationAI\Factory\AIServiceFactory;
 use Exception;
 use Illuminate\Contracts\Filesystem\FileNotFoundException;
 use Illuminate\Database\Console\Migrations\BaseCommand;
 use Illuminate\Database\Console\Migrations\TableGuesser;
 use Illuminate\Support\Str;
-use Symfony\Component\Console\Attribute\AsCommand;
+use Symfony\Component\Console\Command\Command as CommandAlias;
 
-#[AsCommand(name: 'make:migration-ai')]
 class MakeMigrationAICommand extends BaseCommand
 {
     /**
@@ -58,44 +59,49 @@ class MakeMigrationAICommand extends BaseCommand
      */
     public function handle()
     {
-        // It's possible for the developer to specify the tables to modify in this
-        // schema operation. The developer may also specify if this table needs
-        // to be freshly created so we can create the appropriate migrations.
-        $name = Str::snake(trim($this->input->getArgument('name')));
+        try {
+            // It's possible for the developer to specify the tables to modify in this
+            // schema operation. The developer may also specify if this table needs
+            // to be freshly created so we can create the appropriate migrations.
+            $name = Str::snake(trim($this->input->getArgument('name')));
 
-        $table = $this->input->getOption('table');
+            $table = $this->input->getOption('table');
 
-        $create = $this->input->getOption('create') ?: false;
+            $create = $this->input->getOption('create') ?: false;
 
-        $description = $this->input->getArgument('description');
-        $content = $this->generateMigrationContent($description, $create);
-        if (!$content) {
-            return 1;
+            $description = $this->input->getArgument('description');
+            $content = $this->generateMigrationContent($description, $create);
+            if (!$content) {
+                return 1;
+            }
+
+            // If no table was given as an option but a create option is given then we
+            // will use the "create" option as the table name. This allows the devs
+            // to pass a table name into this option as a short-cut for creating.
+            if (!$table && is_string($create)) {
+                $table = $create;
+
+                $create = true;
+            }
+
+            // Next, we will attempt to guess the table name if this the migration has
+            // "create" in the name. This will allow us to provide a convenient way
+            // of creating migrations that create new tables for the Application.
+            if (!$table) {
+                [$table, $create] = TableGuesser::guess($name);
+            }
+
+            $this->writeMigration(
+                name: $name,
+                table: $table,
+                create: $create,
+                content: $content
+            );
+        } catch (Exception $e) {
+            $this->components->error($e->getMessage());
+            return CommandAlias::FAILURE;
         }
-
-        // If no table was given as an option but a create option is given then we
-        // will use the "create" option as the table name. This allows the devs
-        // to pass a table name into this option as a short-cut for creating.
-        if (!$table && is_string($create)) {
-            $table = $create;
-
-            $create = true;
-        }
-
-        // Next, we will attempt to guess the table name if this the migration has
-        // "create" in the name. This will allow us to provide a convenient way
-        // of creating migrations that create new tables for the application.
-        if (!$table) {
-            [$table, $create] = TableGuesser::guess($name);
-        }
-
-        $this->writeMigration(
-            name: $name,
-            table: $table,
-            create: $create,
-            content: $content
-        );
-        return 0;
+        return CommandAlias::SUCCESS;
     }
 
     /**
@@ -155,28 +161,29 @@ class MakeMigrationAICommand extends BaseCommand
      * @param string $description
      * @param bool $isCreate
      * @return MigrationContentDto|null
+     * @throws UnexpectedHttpClientErrorException
+     * @throws UnknownApiKeyProvidedException
      */
     private function generateMigrationContent(string $description, bool $isCreate): ?MigrationContentDto
     {
-        try {
-            $geminiIsEnabled = env(EnvironmentVariablesEnum::GEMINI_API_KEY->value);
-            $apiKey = $this->getApiKey($geminiIsEnabled);
-            $model = $this->getAIModel($geminiIsEnabled);
-            $serviceType = $geminiIsEnabled ? ServiceTypeEnum::GEMINI : ServiceTypeEnum::OPENAI;
-            if (!$apiKey) {
-                $this->components->error('Please provide an API key for Gemini or OpenAI in your .env file');
-            }
-            $this->info('processing .....');
-            return (AIServiceFactory::make($serviceType))->execute(
-                apiKey: $apiKey,
-                model: $model,
-                isCreate: $isCreate,
-                description: $description,
-            );
-        } catch (Exception $e) {
-            $this->components->error($e->getMessage());
-            return null;
+        $geminiIsEnabled = env(EnvironmentVariablesEnum::GEMINI_API_KEY->value);
+        $apiKey = $this->getApiKey($geminiIsEnabled);
+        $model = $this->getAIModel($geminiIsEnabled);
+        $serviceType = $geminiIsEnabled ? ServiceTypeEnum::GEMINI : ServiceTypeEnum::OPENAI;
+        if (!$apiKey) {
+            throw new UnknownApiKeyProvidedException();
         }
+        $this->info('processing .....');
+        $response = (AIServiceFactory::make($serviceType))->execute(
+            apiKey: $apiKey,
+            model: $model,
+            isCreate: $isCreate,
+            description: $description,
+        );
+        if ($response->message) {
+            throw new UnexpectedHttpClientErrorException();
+        }
+        return $response;
     }
 
     /**
@@ -187,7 +194,9 @@ class MakeMigrationAICommand extends BaseCommand
      */
     public function getApiKey(bool $geminiIsEnabled): mixed
     {
-        return $geminiIsEnabled ? env(EnvironmentVariablesEnum::GEMINI_API_KEY->value) : env(EnvironmentVariablesEnum::OPENAI_API_KEY->value);
+        return $geminiIsEnabled
+            ? env(EnvironmentVariablesEnum::GEMINI_API_KEY->value)
+            : env(EnvironmentVariablesEnum::OPENAI_API_KEY->value);
     }
 
     /**
@@ -198,8 +207,8 @@ class MakeMigrationAICommand extends BaseCommand
      */
     public function getAIModel(bool $geminiIsEnabled): mixed
     {
-        return $geminiIsEnabled ?
-            (env(EnvironmentVariablesEnum::GEMINI_MODEL->value) ?? EnvironmentVariablesEnum::DEFAULT_GEMINI_MODEL->value):
-            (env(EnvironmentVariablesEnum::OPENAI_MODEL->value) ?? EnvironmentVariablesEnum::DEFAULT_OPENAI_MODEL->value);
+        return $geminiIsEnabled
+            ? (env(EnvironmentVariablesEnum::GEMINI_MODEL->value) ?? EnvironmentVariablesEnum::DEFAULT_GEMINI_MODEL->value)
+            : (env(EnvironmentVariablesEnum::OPENAI_MODEL->value) ?? EnvironmentVariablesEnum::DEFAULT_OPENAI_MODEL->value);
     }
 }

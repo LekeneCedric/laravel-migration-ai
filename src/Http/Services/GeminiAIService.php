@@ -1,46 +1,49 @@
 <?php
 
-namespace CedricLekene\LaravelMigrationAI\Services;
+namespace CedricLekene\LaravelMigrationAI\Http\Services;
 
 use CedricLekene\LaravelMigrationAI\contracts\AIService;
 use CedricLekene\LaravelMigrationAI\Dto\MigrationContentDto;
-use CedricLekene\LaravelMigrationAI\Infrastructure\HttpClient;
+use CedricLekene\LaravelMigrationAI\Enums\ErrorMessagesEnum;
+use CedricLekene\LaravelMigrationAI\Http\HttpClient;
+use Exception;
 
 class GeminiAIService implements AIService
 {
-
     public function execute(string $apiKey, string $model, bool $isCreate, string $description): MigrationContentDto
     {
         $apiUrl = "https://generativelanguage.googleapis.com/v1beta/models/" . $model . ':generateContent' . '?key=' . $apiKey;
-        $prompt = [
-            [
-                'text' => $this->buildPrompt(description: $description, isCreate: $isCreate),
-            ]
+        $prompt = [['text' => $this->buildPrompt(description: $description, isCreate: $isCreate)]];
+        $headers = [
+            'Content-Type: Application/json',
         ];
-
         $requestBody = [
             "contents" => [
                 "parts" => $prompt
             ],
             "generationConfig" => [
                 "temperature" => 0.0,
-                "response_mime_type" => "application/json",
+                "response_mime_type" => "Application/json",
             ],
         ];
 
-        $headers = [
-            'Content-Type: application/json',
-        ];
-        $response = HttpClient::httpCall($apiUrl, 'POST', $headers, $requestBody);
-        if (!$response) {
-            return new MigrationContentDto(message: 'Something went wrong dude , try again !');
+        $httpResponse = httpClient::httpCall($apiUrl, 'POST', $headers, $requestBody);
+
+        try {
+            if (!$httpResponse['status']) {
+                return new MigrationContentDto(message: $httpResponse['response']['error']['message']);
+            }
+            $cleanedResponse = $httpResponse['response']['candidates'][0]['content']['parts'][0]['text'];
+            $responseData = json_decode($cleanedResponse, true);
+            return new MigrationContentDto(
+                migrationUp: $responseData['content'],
+                migrationDown: $responseData['reverse_content'] ?? ''
+            );
+        } catch (Exception){
+            return new MigrationContentDto(
+                message: ErrorMessagesEnum::SOMETHING_WENT_WRONG->value
+            );
         }
-        $cleanedResponse = $response['candidates'][0]['content']['parts'][0]['text'];
-        $responseData = json_decode($cleanedResponse, true);
-        return new MigrationContentDto(
-            migrationUp: $responseData['content'],
-            migrationDown: $responseData['reverse_content'] ?? ''
-        );
     }
 
     private function buildPrompt(string $description, bool $isCreate): string

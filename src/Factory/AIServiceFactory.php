@@ -4,8 +4,8 @@ namespace CedricLekene\LaravelMigrationAI\Factory;
 
 use CedricLekene\LaravelMigrationAI\contracts\AIService;
 use CedricLekene\LaravelMigrationAI\Enums\ServiceTypeEnum;
-use CedricLekene\LaravelMigrationAI\Services\GeminiAIService;
-use CedricLekene\LaravelMigrationAI\Services\OpenAIService;
+use CedricLekene\LaravelMigrationAI\Http\Services\GeminiAIService;
+use CedricLekene\LaravelMigrationAI\Http\Services\OpenAIService;
 
 class AIServiceFactory
 {
