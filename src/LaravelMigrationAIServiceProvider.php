@@ -2,12 +2,15 @@
 
 namespace CedricLekene\LaravelMigrationAI;
 
+use CedricLekene\LaravelMigrationAI\Database\Console\Migrations\MakeMigrationAICommand;
+use CedricLekene\LaravelMigrationAI\Database\Migrations\MigrationAICreator;
 use Illuminate\Support\ServiceProvider;
 
 class LaravelMigrationAIServiceProvider extends ServiceProvider
 {
     public function boot(): void
     {
+        $this->registerCreator();
         $this->registerCommands();
     }
 
@@ -20,7 +23,20 @@ class LaravelMigrationAIServiceProvider extends ServiceProvider
     {
         if ($this->app->runningInConsole()) {
             $this->commands([
+                MakeMigrationAICommand::class
             ]);
         }
+    }
+
+    /**
+     * Register the MigrationAICreator
+     *
+     * @return void
+     */
+    private function registerCreator(): void
+    {
+        $this->app->singleton(MigrationAICreator::class, function($app) {
+            return new MigrationAICreator($app['files'],  __DIR__ . '/Database/Migrations/stubs');
+        });
     }
 }
