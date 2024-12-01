@@ -41,7 +41,7 @@ composer.lock
 *.history
 
 # PHPUnit
-phpunit.xml
+.phpunit.xml
 /phpunit.xml
 /phpunit.xml.dist
 
