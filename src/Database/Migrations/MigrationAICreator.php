@@ -86,7 +86,7 @@ class MigrationAICreator extends MigrationCreator
     public function populateStub($stub, $table, $create = null, MigrationContentDto $content = null): string
     {
         $migrationUp = str_replace(";", ";\n\t\t\t", $content->migrationUp);
-        $migrationDown = str_replace(";", ";\n\t\t\t", $content->migrationDown);
+        $migrationDown = str_replace(";", ";\n\t\t\t", $content->migrationDown ?? ' ');
 
         if ($create) {
             $stub = str_replace(

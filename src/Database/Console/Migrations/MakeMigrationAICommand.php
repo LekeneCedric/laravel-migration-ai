@@ -55,7 +55,6 @@ class MakeMigrationAICommand extends BaseCommand
     /**
      * Execute the console command.
      *
-     * @throws FileNotFoundException
      */
     public function handle()
     {
@@ -70,10 +69,7 @@ class MakeMigrationAICommand extends BaseCommand
             $create = $this->input->getOption('create') ?: false;
 
             $description = $this->input->getArgument('description');
-            $content = $this->generateMigrationContent($description, $create);
-            if (!$content) {
-                return 1;
-            }
+            $content = $this->generateMigrationContent($name, $description, $create);
 
             // If no table was given as an option but a create option is given then we
             // will use the "create" option as the table name. This allows the devs
@@ -158,13 +154,14 @@ class MakeMigrationAICommand extends BaseCommand
     /**
      * Generate migration content using AI service
      *
+     * @param string $tableName
      * @param string $description
      * @param bool $isCreate
      * @return MigrationContentDto|null
      * @throws UnexpectedHttpClientErrorException
      * @throws UnknownApiKeyProvidedException
      */
-    private function generateMigrationContent(string $description, bool $isCreate): ?MigrationContentDto
+    private function generateMigrationContent(string $tableName, string $description, bool $isCreate): ?MigrationContentDto
     {
         $geminiIsEnabled = env(EnvironmentVariablesEnum::GEMINI_API_KEY->value);
         $apiKey = $this->getApiKey($geminiIsEnabled);
@@ -178,6 +175,7 @@ class MakeMigrationAICommand extends BaseCommand
             apiKey: $apiKey,
             model: $model,
             isCreate: $isCreate,
+            tableName: $tableName,
             description: $description,
         );
         if ($response->message) {

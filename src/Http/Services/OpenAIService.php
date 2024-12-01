@@ -10,13 +10,7 @@ use Exception;
 
 class OpenAIService implements AIService
 {
-    private HttpClient $httpClient;
-    public function __construct()
-    {
-        $this->httpClient = new HttpClient();
-    }
-
-    public function execute(string $apiKey, string $model, bool $isCreate, string $description): MigrationContentDto
+    public function execute(string $apiKey, string $model, bool $isCreate, string $tableName, string $description): MigrationContentDto
     {
         $apiUrl = 'https://api.openai.com/v1/chat/completions';
         $prompt = $this->buildPrompt($description, $isCreate);
@@ -32,7 +26,7 @@ class OpenAIService implements AIService
             'Authorization: Bearer ' . $apiKey,
         ];
 
-        $httpResponse = $this->httpClient::httpCall($apiUrl, 'POST', $headers, $requestBody);
+        $httpResponse = HttpClient::httpCall($apiUrl, 'POST', $headers, $requestBody);
 
         try {
             if (!$httpResponse['status']) {

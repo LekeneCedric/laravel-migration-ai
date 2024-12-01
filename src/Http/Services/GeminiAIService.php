@@ -10,20 +10,23 @@ use Exception;
 
 class GeminiAIService implements AIService
 {
-    public function execute(string $apiKey, string $model, bool $isCreate, string $description): MigrationContentDto
+    public function execute(string $apiKey, string $model, bool $isCreate, string $tableName, string $description): MigrationContentDto
     {
         $apiUrl = "https://generativelanguage.googleapis.com/v1beta/models/" . $model . ':generateContent' . '?key=' . $apiKey;
-        $prompt = [['text' => $this->buildPrompt(description: $description, isCreate: $isCreate)]];
-        $headers = [
-            'Content-Type: Application/json',
+        $prompt = [
+            ['text' => 'table name : '.$tableName],
+            ['text' => $this->buildPrompt(description: $description, isCreate: $isCreate)]
         ];
+            $headers = [
+                'Content-Type: Application/json',
+            ];
         $requestBody = [
             "contents" => [
                 "parts" => $prompt
             ],
             "generationConfig" => [
                 "temperature" => 0.0,
-                "response_mime_type" => "Application/json",
+                "response_mime_type" => "application/json",
             ],
         ];
 
@@ -51,7 +54,7 @@ class GeminiAIService implements AIService
         $action = $isCreate ? 'create a new table' : 'update an existing table';
         return "You are a Laravel migration assistant. Given the description and action:\n".
                 "- Description: $description\n" .
-                "- Action: $action\n\n".
+                "- Action: $action\n".
                 "Output:".
                 "{\n".
                 "  \"content\": \"content inside function(Blueprint \$table) { }\",\n" .
@@ -62,7 +65,7 @@ class GeminiAIService implements AIService
                 "{\n".
                 "  \"content\": \"\$table->string('name', 200); \$table->enum('type', ['card', 'bank']);\"".
                 "  \"reverse_content\": \"\$table->dropColumn('name'); \$table->dropColumn('type');\"\n".
-                "}\n\n".
+                "}\n".
                 "2. Creating table `users`:\n".
                 "{\n".
                 "  \"content\": \"\$table->string('name', 200); \$table->enum('type', ['card', 'bank']);\",\n".
