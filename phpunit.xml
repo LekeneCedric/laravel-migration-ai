@@ -4,15 +4,6 @@
         colors="true"
         bootstrap="vendor/autoload.php">
     <php>
-        <env name="GEMINI_API_KEY" value="AIzaSyCj-h4RhWxreMtnMxZFXvNRM7WYErnOddw"/>
-        <env name="OPENAI_API_KEY" value="" />
+        <env name="GEMINI_API_KEY" value=""/>
     </php>
-    <testsuites>
-        <testsuite name="Feature Test Suite">
-            <directory>tests/Feature</directory>
-        </testsuite>
-        <testsuite name="Unit Test Suite">
-            <directory>tests/Unit</directory>
-        </testsuite>
-    </testsuites>
 </phpunit>
