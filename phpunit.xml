@@ -1,9 +1,0 @@
-<phpunit
-        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
-        colors="true"
-        bootstrap="vendor/autoload.php">
-    <php>
-        <env name="GEMINI_API_KEY" value=""/>
-    </php>
-</phpunit>
