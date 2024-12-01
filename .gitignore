@@ -1,5 +1,8 @@
 .idea/
 tests/
+.gitignore
+composer.lock
+CONTRIBUTING.md
 # Laravel Framework
 /vendor
 /node_modules
