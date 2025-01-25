@@ -162,7 +162,7 @@ class MakeMigrationAICommand extends BaseCommand
      */
     private function generateMigrationContent(string $tableName, string $description, bool $isCreate): ?MigrationContentDto
     {
-        $geminiIsEnabled = env(EnvironmentVariablesEnum::GEMINI_API_KEY->value);
+        $geminiIsEnabled = env(EnvironmentVariablesEnum::GEMINI_API_KEY->value) ?? false;
         $apiKey = $this->getApiKey($geminiIsEnabled);
         $model = $this->getAIModel($geminiIsEnabled);
         $serviceType = $geminiIsEnabled ? ServiceTypeEnum::GEMINI : ServiceTypeEnum::OPENAI;
