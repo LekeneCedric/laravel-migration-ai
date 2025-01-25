@@ -86,10 +86,13 @@ class MakeMigrationAICommand extends BaseCommand
             if (!$table) {
                 [$table, $create] = TableGuesser::guess($name);
             }
+            while(!$table){
+                $table = $this->ask('What is the table name?');
+            }
             $this->writeMigration(
                 name: $name,
                 table: $table,
-                create: $create,
+                create: $create ?? true,
                 content: $content
             );
         } catch (Exception $e) {
