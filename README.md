@@ -2,6 +2,7 @@
 
 A Laravel package that uses AI to generate database migrations from plain-language descriptions, simplifying the migration creation process.
 
+![Demo GIF](./demo/demo.gif)
 ## Table of Contents
 
 - [Installation](#installation)
